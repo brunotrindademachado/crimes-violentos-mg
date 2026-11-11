@@ -854,7 +854,7 @@ grafico_mapa_localizacao <- function(tabela, nome_municipio) {
 #  {.sidebar}
 
 ```{r}
-selectInput("cidade", "Cidade:", choices = unique(dados_totais$municipio), selected = "UBERLANDIA")
+selectInput("cidade", "Cidade:", choices = str_sort(unique(dados_totais$municipio), locale = "pt"), selected = "Uberlândia")
 
 sidebarPanel("",
              textOutput("popCidade")

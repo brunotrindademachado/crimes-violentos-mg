@@ -1,4 +1,5 @@
 if(!require('dplyr'))install.packages("dplyr");library(dplyr)
+if(!require('readxl'))install.packages("readxl");library(readxl)
 
 # listing files in the directory
 lf <- list.files("dados_input")
@@ -113,6 +114,23 @@ cria_tipo <- function(df) {
 dados_totais_tratados <- cria_tipo(dados_totais_tratados)
 
 
+## Substitui os nomes dos municípios (em caixa alta e sem acento na base da Sejusp)
+## pela grafia oficial do IBGE com iniciais maiúsculas e acentuação correta.
+padroniza_municipios <- function(df, caminho_ibge = "dados_input/POP2026.xlsx", sheet_ibge = "MG-2026") {
+  municipios_ibge <- read_excel(caminho_ibge, sheet = sheet_ibge) |>
+    mutate(cod_municipio = as.integer(substr(paste0("31", `COD. MUNIC`), start = 1, stop = 6))) |>
+    select(cod_municipio, municipio_ibge = `NOME DO MUNICÍPIO`) |>
+    distinct(cod_municipio, .keep_all = TRUE)
+
+  df |>
+    left_join(municipios_ibge, by = "cod_municipio") |>
+    mutate(municipio = coalesce(municipio_ibge, municipio)) |>
+    select(-municipio_ibge)
+}
+
+dados_totais_tratados <- padroniza_municipios(dados_totais_tratados)
+
+
 write.csv(dados_totais_tratados, 
-          gzfile("dados_dash/dados_totais_tratados.csv.gz"), 
+          gzfile("dados_dash/dados_totais_tratados.csv.gz", encoding = "UTF-8"), 
           row.names = FALSE)
